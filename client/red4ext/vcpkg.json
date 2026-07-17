@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "cyber-rest-client",
+  "version-string": "0.1.0",
+  "description": "cyber.rest — Cyberpunk 2077 multiplayer RED4ext client plugin (Phase 0 skeleton)",
+  "dependencies": [
+    "gamenetworkingsockets"
+  ]
+}

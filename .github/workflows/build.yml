@@ -1,0 +1,66 @@
+name: CI Build
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  client:
+    name: RED4ext client plugin (windows)
+    runs-on: windows-latest
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows
+      # vcpkg writes/reads prebuilt binary packages here; actions/cache persists this dir across
+      # runs so GameNetworkingSockets + deps are restored, not recompiled (~2-3m vs ~40m).
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg_bincache
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: lukka/get-cmake@latest
+
+      - name: Create vcpkg binary-cache dir
+        run: mkdir -p '${{ github.workspace }}\vcpkg_bincache'
+        shell: bash
+
+      # Persist vcpkg's prebuilt binaries across runs via GitHub's (v2) cache. First build
+      # populates it; every build after restores GNS+deps instead of recompiling from source.
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\vcpkg_bincache
+          key: vcpkg-bin-${{ runner.os }}-271a5b8-${{ hashFiles('client/red4ext/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-bin-${{ runner.os }}-271a5b8-
+            vcpkg-bin-${{ runner.os }}-
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@main
+        id: runvcpkg
+        with:
+          # This vcpkg.json drives the cache key + dependency install.
+          vcpkgJsonGlob: 'client/red4ext/vcpkg.json'
+          # Pinned to the same vcpkg commit the reference CI proved out.
+          vcpkgGitCommitId: '271a5b8850aa50f9a40269cbf3cf414b36e333d6'
+
+      - name: Generate build output folder
+        run: mkdir '${{ github.workspace }}\client\red4ext\build\ninja-vcpkg'
+
+      - name: Configure & build with CMake + vcpkg
+        uses: lukka/run-cmake@v10
+        with:
+          cmakeListsTxtPath: '${{ github.workspace }}/client/red4ext/CMakeLists.txt'
+          configurePreset: ninja-vcpkg
+          buildPreset: ninja-vcpkg
+          buildPresetAdditionalArgs: "['--config Release']"
+
+      - name: Upload CyberRest plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: CyberRest-plugin
+          path: client/red4ext/build/ninja-vcpkg/src/*.dll

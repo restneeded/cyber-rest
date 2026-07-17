@@ -1,0 +1,44 @@
+# Build output
+/build/
+**/build/
+out/
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+*.obj
+*.lib
+*.exp
+*.ilk
+
+# vcpkg
+vcpkg_installed/
+.vcpkg/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeUserPresets.json
+
+# redscript compiled cache
+*.redscripts
+
+# Packaging
+/dist/
+*.zip
+
+# IDE / editor
+.vs/
+.vscode/
+.idea/
+*.user
+
+# OS
+.DS_Store
+._*
+Thumbs.db
+
+# Logs / local
+*.log
+.env
